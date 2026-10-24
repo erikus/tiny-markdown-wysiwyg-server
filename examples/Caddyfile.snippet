@@ -1,0 +1,18 @@
+# Serve a few directories read-only with directory listings, and let the
+# listing link each Markdown file to mdedit. mdedit itself is NOT behind
+# Caddy here: it runs as its own tailnet node (--tsnet-hostname) so that only
+# the tailnet users allowed to reach that node can write. Caddy keeps serving
+# files to whoever may read them.
+files.example.com {
+	root * /srv/files
+	file_server {
+		browse /etc/caddy/browse.html
+	}
+}
+
+# Pair it with (see examples/env.example):
+#   mdedit --tsnet-hostname edit \
+#          --root notes=/home/me/notes --root code=/home/me/code \
+#          --view-base https://files.example.com
+# where /srv/files/notes and /srv/files/code are the same directories
+# (bind-mounted read-only into the Caddy container, for instance).

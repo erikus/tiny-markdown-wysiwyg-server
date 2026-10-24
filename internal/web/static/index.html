@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="mdedit-view-base" content="{{.ViewBase}}">
+<title>mdedit</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/static/app.css">
+<script type="module" src="/static/app.js"></script>
+</head>
+<body>
+<header>
+  <span id="path"></span>
+  <span id="status">Loading…</span>
+  <span id="note"></span>
+  <a id="view" href="#" hidden>View</a>
+  <button id="raw-toggle" type="button" aria-pressed="false" disabled>Raw</button>
+  <button id="save" type="button" class="primary" disabled>Save</button>
+</header>
+<div id="conflict" class="banner" role="alert" hidden>
+  <span id="conflict-text">File changed on disk.</span>
+  <button id="reload" type="button">Reload</button>
+</div>
+<div id="error" class="banner" role="alert" hidden></div>
+<main>
+  <div id="editor"></div>
+  <textarea id="raw" spellcheck="false" hidden></textarea>
+</main>
+</body>
+</html>

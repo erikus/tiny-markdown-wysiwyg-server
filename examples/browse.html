@@ -1,0 +1,19 @@
+<!doctype html>
+<meta name="viewport" content="width=device-width">
+<meta name="color-scheme" content="light dark">
+<!--
+  Caddy file_server browse template with an "edit" link next to every
+  Markdown file, pointing at mdedit. Replace EDIT_HOST with the host mdedit is
+  reachable on (its tsnet node name, e.g. edit.example.ts.net). The mdedit
+  --root NAMEs must match the first path segment of the URLs this file_server
+  serves, e.g. `root * /srv/files` holding `/srv/files/notes` pairs with
+  `--root notes=/home/me/notes`.
+
+  .Path is the request path of the listed directory (always ends in "/"), so
+  $.Path + .Name is the file's path relative to the file_server root.
+-->
+<pre>
+{{- range .Items}}
+<a href="{{html .URL}}">{{html .Name}}</a>{{if .HasExt ".md" ".markdown"}}  <a href="https://EDIT_HOST/edit{{html $.Path}}{{html .Name}}">edit</a>{{end}}
+{{- end}}
+</pre>
