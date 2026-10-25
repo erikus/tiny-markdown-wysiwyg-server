@@ -9,11 +9,14 @@
   serves, e.g. `root * /srv/files` holding `/srv/files/notes` pairs with
   `--root notes=/home/me/notes`.
 
-  .Path is the request path of the listed directory (always ends in "/"), so
-  $.Path + .Name is the file's path relative to the file_server root.
+  .Path is the cleaned, percent-encoded request path of the listed directory
+  with no trailing slash ("/" at the root, "/notes/sub" below it), so
+  $.Path + "/" + .Name is the file's path relative to the file_server root.
+  Files at the root itself get no link: mdedit paths always start with a
+  root name.
 -->
 <pre>
 {{- range .Items}}
-<a href="{{html .URL}}">{{html .Name}}</a>{{if .HasExt ".md" ".markdown"}}  <a href="https://EDIT_HOST/edit{{html $.Path}}{{html .Name}}">edit</a>{{end}}
+<a href="{{html .URL}}">{{html .Name}}</a>{{if and (.HasExt ".md" ".markdown") (ne $.Path "/")}}  <a href="https://EDIT_HOST/edit{{$.Path}}/{{html .Name}}">edit</a>{{end}}
 {{- end}}
 </pre>
