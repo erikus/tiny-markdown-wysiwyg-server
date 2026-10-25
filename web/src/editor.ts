@@ -7,14 +7,17 @@ import {
   rootCtx,
 } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
-import { commonmark, htmlSchema } from "@milkdown/kit/preset/commonmark";
+import { commonmark, htmlSchema, listItemSchema } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { history } from "@milkdown/kit/plugin/history";
 import { listener, listenerCtx } from "@milkdown/kit/plugin/listener";
 import { $view, getMarkdown, replaceAll } from "@milkdown/kit/utils";
-import type { NodeViewConstructor } from "@milkdown/kit/prose/view";
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+import type { NodeViewConstructor, ViewMutationRecord } from "@milkdown/kit/prose/view";
 
 const HTML_NODE_CLASS = "md-html";
+const TASK_ITEM_TYPE = "task";
+const TASK_CHECKBOX_CLASS = "md-task-checkbox";
 
 /**
  * Node view for the commonmark `html` node. The preset's own toDOM already
@@ -29,6 +32,81 @@ const htmlAsText = $view(htmlSchema.node, (): NodeViewConstructor => {
     dom.dataset["type"] = "html";
     dom.textContent = String(node.attrs["value"] ?? "");
     return { dom };
+  };
+});
+
+/** Mirror the preset's `li` data attributes so the existing CSS and parseDOM keep working. */
+function applyListItemAttrs(li: HTMLLIElement, node: ProseNode): void {
+  const checked: boolean | null = (node.attrs["checked"] as boolean | null | undefined) ?? null;
+  li.dataset["label"] = String(node.attrs["label"] ?? "");
+  li.dataset["listType"] = String(node.attrs["listType"] ?? "");
+  li.dataset["spread"] = String(Boolean(node.attrs["spread"]));
+  if (checked === null) {
+    delete li.dataset["itemType"];
+    delete li.dataset["checked"];
+  } else {
+    li.dataset["itemType"] = TASK_ITEM_TYPE;
+    li.dataset["checked"] = String(checked);
+  }
+}
+
+/**
+ * Node view for list items. Plain items render like the preset does. GFM task
+ * items (`checked` is a boolean) get a real, clickable checkbox that flips the
+ * `checked` attribute through a transaction, so the change reaches the
+ * serializer as `[x]` / `[ ]`.
+ */
+const taskListItem = $view(listItemSchema.node, (): NodeViewConstructor => {
+  return (initialNode, view, getPos) => {
+    const isTask = (node: ProseNode): boolean => node.attrs["checked"] != null;
+    const li = document.createElement("li");
+    applyListItemAttrs(li, initialNode);
+    if (!isTask(initialNode)) {
+      return {
+        dom: li,
+        contentDOM: li,
+        update(node: ProseNode): boolean {
+          if (node.type !== initialNode.type || isTask(node)) return false;
+          applyListItemAttrs(li, node);
+          return true;
+        },
+      };
+    }
+    const label = document.createElement("label");
+    label.className = TASK_CHECKBOX_CLASS;
+    label.contentEditable = "false";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = Boolean(initialNode.attrs["checked"]);
+    label.appendChild(checkbox);
+    const content = document.createElement("div");
+    li.appendChild(label);
+    li.appendChild(content);
+    checkbox.addEventListener("change", () => {
+      const pos = getPos();
+      if (pos === undefined) return;
+      const node = view.state.doc.nodeAt(pos);
+      if (!node) return;
+      view.dispatch(
+        view.state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, checked: checkbox.checked }),
+      );
+    });
+    return {
+      dom: li,
+      contentDOM: content,
+      update(node: ProseNode): boolean {
+        if (node.type !== initialNode.type || !isTask(node)) return false;
+        applyListItemAttrs(li, node);
+        checkbox.checked = Boolean(node.attrs["checked"]);
+        return true;
+      },
+      stopEvent(event: Event): boolean {
+        return event.target === checkbox;
+      },
+      ignoreMutation(mutation: ViewMutationRecord): boolean {
+        return label.contains(mutation.target);
+      },
+    };
   };
 });
 
@@ -62,6 +140,7 @@ export async function createEditor(opts: EditorOptions): Promise<EditorHandle> {
     .use(history)
     .use(listener)
     .use(htmlAsText)
+    .use(taskListItem)
     .create();
 
   return {

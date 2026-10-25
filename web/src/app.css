@@ -262,18 +262,32 @@ main {
   padding: 0 0.2em;
 }
 
-/* GFM task list items: the preset emits li[data-item-type="task"][data-checked]
-   without an input; draw the box with CSS. */
+/* GFM task list items: our node view renders a real checkbox before the
+   item content (see editor.ts). */
 .ProseMirror li[data-item-type="task"] {
   list-style: none;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4em;
 }
 
-.ProseMirror li[data-item-type="task"] > p:first-child::before {
-  content: "\2610\00a0";
-  font-family: var(--font-ui);
+.ProseMirror li[data-item-type="task"] > .md-task-checkbox {
+  flex: none;
+  user-select: none;
+}
+
+.ProseMirror li[data-item-type="task"] > .md-task-checkbox > input {
+  margin: 0;
+  vertical-align: middle;
+  cursor: pointer;
+  accent-color: var(--accent, currentColor);
+}
+
+.ProseMirror li[data-item-type="task"] > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ProseMirror li[data-item-type="task"][data-checked="true"] > div {
   color: var(--muted);
-}
-
-.ProseMirror li[data-item-type="task"][data-checked="true"] > p:first-child::before {
-  content: "\2611\00a0";
 }
