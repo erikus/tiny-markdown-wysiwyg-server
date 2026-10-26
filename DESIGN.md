@@ -182,3 +182,65 @@ Write (`Save(path, content, expectedVersion)`), under a store-wide mutex:
 `web` (npm ci + build), `build` (go build -o bin/mdedit), `test` (go test
 ./... and a frontend typecheck), `install` (symlink unit, daemon-reload,
 enable --now), `all` = web build.
+
+## Formatting-preserving save (web/src/merge.ts)
+
+Problem: the editor serializes the whole document on save, so an untouched
+file comes back with normalized bullets (`-` → `*`), rules (`---` → `***`),
+re-padded tables, extra escapes, and so on. One checkbox toggle in a
+382-line file rewrote 277 lines. Saves must be *stable*: bytes the user did
+not touch stay byte-identical.
+
+Approach: a structural three-way merge at save time, in the browser.
+
+- `O` = the file as loaded (after the server's LF/BOM normalization).
+- `N` = the editor's serialized Markdown (`getMarkdown()`).
+- Parse both with the same remark processor the editor uses
+  (`remarkCtx` from `@milkdown/kit/core`, so plugins/GFM match), keeping
+  `position` offsets. Call the trees `oTree` and `nTree`.
+- `merge(oNode, nNode)` returns Markdown text for `nNode`:
+  1. If the nodes are structurally equal (same type, same own attributes,
+     recursively equal children; `position` ignored), return the exact
+     source slice of `oNode` from `O`.
+  2. Recurse only into these container types: `root`, `list`, `listItem`.
+     For `root`: align children by structural equality using a sequence
+     diff (LCS over child hashes). Children matched to an `O` child emit the
+     `O` slice; others emit their `N` slice. Between two consecutive emitted
+     children that both came from `O` and were adjacent in `O`, reuse the
+     original gap text; otherwise separate with `\n\n`.
+     For `list` whose own attrs (`ordered`, `start`, `spread`) equal: same
+     child alignment over `listItem`s. Every item emitted from `N` is
+     re-markered to the `O` list's style: replace the leading
+     `[-*+]` or `\d+[.)]` marker (and the task `[ ]`/`[x]` box is taken from
+     `N`) with the marker style of the `O` item it replaces, or of the
+     nearest `O` sibling; for ordered lists keep `O`'s numbering scheme
+     (all-same-number vs incrementing). Continuation lines of an `N` item
+     are re-indented from `N`'s content offset to `O`'s.
+     For `listItem`: if only `checked` differs and the children are equal,
+     return the `O` slice with the box text (`[ ]`/`[x]`/`[X]`) replaced.
+     Otherwise prefix = `O` slice up to the first child's start (marker, box
+     updated from `N`), then merge children (paragraph + nested lists) with
+     the same alignment; children taken from `N` are re-indented to `O`'s
+     content offset.
+  3. Any other node type, or a container whose own attrs differ, is a leaf:
+     equal → `O` slice, otherwise `N` slice.
+- **Validation is mandatory.** After merging, parse the result and compare
+  it structurally to `nTree` (positions ignored). If they differ in any way,
+  discard the merge and save `N` verbatim (the current behaviour), and
+  surface it in the status note. The saved file must always mean exactly
+  what the editor shows; preservation is best-effort, correctness is not.
+- Trailing newline, CRLF and BOM stay the server's job (unchanged).
+- Also set `remarkStringifyOptionsCtx` to `{ bullet: "-", rule: "-",
+  listItemIndent: "one", fences: true, emphasis: "_", strong: "*" }` so
+  *new* content follows the most common style.
+- The "Saving will reformat" note changes meaning: it now appears only when
+  the merge fell back to `N` (validation failed), and the no-op save rule
+  (`serialize(doc) === baseline` → nothing to save) is unchanged.
+- Tests: a corpus under `web/test/merge/` of `(original, edited-serialized,
+  expected)` triples plus property checks: `merge(O, serialize(parse(O)))`
+  must equal `O` for every corpus file (stability), and `parse(merge(O, N))`
+  must structurally equal `parse(N)` for every pair (correctness). Run with
+  `npm test` (esbuild-bundle the tests, run with `node --test`). Do not
+  commit any personal documents as fixtures.
+- A small CLI, `web/scripts/merge.mjs ORIGINAL NEW`, prints the merged
+  Markdown; used for ad-hoc checks and to repair files already reformatted.
