@@ -4,9 +4,12 @@ import {
   Editor,
   defaultValueCtx,
   editorViewCtx,
+  remarkCtx,
+  remarkStringifyOptionsCtx,
   rootCtx,
 } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
+import type { Root } from "mdast";
 import { commonmark, htmlSchema, listItemSchema } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { history } from "@milkdown/kit/plugin/history";
@@ -14,6 +17,7 @@ import { listener, listenerCtx } from "@milkdown/kit/plugin/listener";
 import { $view, getMarkdown, replaceAll } from "@milkdown/kit/utils";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { NodeViewConstructor, ViewMutationRecord } from "@milkdown/kit/prose/view";
+import { EDITOR_STRINGIFY_OPTIONS } from "./stringify-options";
 
 const HTML_NODE_CLASS = "md-html";
 const TASK_ITEM_TYPE = "task";
@@ -115,6 +119,11 @@ export interface EditorHandle {
   getMarkdown(): string;
   /** Replace the whole document from Markdown (resets undo history when `flush`). */
   setMarkdown(markdown: string, flush: boolean): void;
+  /**
+   * Parse Markdown to mdast exactly as the editor does (remark-parse plus the
+   * presets' remark plugins, GFM included), keeping source positions.
+   */
+  parseMarkdown(markdown: string): Root;
   focus(): void;
   destroy(): Promise<void>;
 }
@@ -131,6 +140,8 @@ export async function createEditor(opts: EditorOptions): Promise<EditorHandle> {
     .config((ctx: Ctx) => {
       ctx.set(rootCtx, opts.root);
       ctx.set(defaultValueCtx, opts.initialMarkdown);
+      // Keep Milkdown's own handlers (marker preservation); only add style options.
+      ctx.update(remarkStringifyOptionsCtx, (prev) => ({ ...prev, ...EDITOR_STRINGIFY_OPTIONS }));
       ctx.get(listenerCtx).markdownUpdated((_ctx: Ctx, markdown: string) => {
         opts.onMarkdownUpdated(markdown);
       });
@@ -149,6 +160,14 @@ export async function createEditor(opts: EditorOptions): Promise<EditorHandle> {
     },
     setMarkdown(markdown: string, flush: boolean): void {
       editor.action(replaceAll(markdown, flush));
+    },
+    parseMarkdown(markdown: string): Root {
+      return editor.action((ctx: Ctx): Root => {
+        // Milkdown's ParserState does exactly this (parse, then runSync for the
+        // transformer plugins), so the tree matches what the editor loads.
+        const remark = ctx.get(remarkCtx);
+        return remark.runSync(remark.parse(markdown), markdown) as Root;
+      });
     },
     focus(): void {
       editor.action((ctx: Ctx) => {

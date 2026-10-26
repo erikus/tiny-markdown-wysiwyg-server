@@ -3,6 +3,7 @@
 
 import { ApiError, fetchFile, saveFile } from "./api";
 import { createEditor, type EditorHandle } from "./editor";
+import { mergeMarkdown } from "./merge";
 
 const EDIT_PREFIX = "/edit/";
 const IMG_PREFIX = "/img/";
@@ -102,7 +103,10 @@ class App {
   private readonly path: FilePath;
   private editor: EditorHandle | null = null;
   private version = "";
+  /** The editor's serialization of the saved document; dirty = serialize(doc) !== baseline. */
   private baseline = "";
+  /** The file text as last loaded or saved; the base for the formatting-preserving merge. */
+  private loadedContent = "";
   private rawMode = false;
   private saving = false;
   private dirty = false;
@@ -143,7 +147,7 @@ class App {
     });
 
     this.baseline = this.editor.getMarkdown();
-    this.el.note.textContent = this.baseline !== file.content ? REFORMAT_NOTE : "";
+    this.setLoaded(file.content);
     this.setDirty(false);
     this.bindEvents();
     this.el.save.disabled = false;
@@ -173,6 +177,23 @@ class App {
         e.returnValue = "";
       }
     });
+  }
+
+  /**
+   * Record the on-disk text and warn if even the merge cannot preserve its
+   * formatting (so the user knows before the first save).
+   */
+  private setLoaded(content: string): void {
+    this.loadedContent = content;
+    const probe = this.editor === null ? null : this.mergeForSave(this.baseline);
+    this.el.note.textContent = probe !== null && !probe.preserved ? REFORMAT_NOTE : "";
+  }
+
+  /** Merge the editor's serialization into the loaded text; `preserved` is false on fallback. */
+  private mergeForSave(markdown: string): { text: string; preserved: boolean } {
+    if (this.editor === null) return { text: markdown, preserved: true };
+    const editor = this.editor;
+    return mergeMarkdown(this.loadedContent, markdown, (md: string) => editor.parseMarkdown(md));
   }
 
   private onEditorChanged(markdown: string): void {
@@ -238,15 +259,19 @@ class App {
       return;
     }
 
+    // WYSIWYG saves go through the formatting-preserving merge; raw mode is verbatim.
+    const merged = this.rawMode ? { text: content, preserved: true } : this.mergeForSave(content);
+
     this.saving = true;
     this.clearError();
     this.setStatus("saving");
     this.el.save.disabled = true;
     try {
-      const resp = await saveFile(this.path.decoded, content, this.version);
+      const resp = await saveFile(this.path.decoded, merged.text, this.version);
       this.version = resp.version;
       this.baseline = content;
-      this.el.note.textContent = "";
+      this.loadedContent = merged.text;
+      this.el.note.textContent = merged.preserved ? "" : REFORMAT_NOTE;
       this.el.conflict.hidden = true;
       this.status = "saved";
       this.setDirty(this.currentMarkdown() !== this.baseline);
@@ -273,7 +298,7 @@ class App {
       this.version = file.version;
       this.editor.setMarkdown(file.content, true);
       this.baseline = this.editor.getMarkdown();
-      this.el.note.textContent = this.baseline !== file.content ? REFORMAT_NOTE : "";
+      this.setLoaded(file.content);
       if (this.rawMode) this.el.raw.value = this.baseline;
       this.el.conflict.hidden = true;
       this.clearError();
