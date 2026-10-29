@@ -6,6 +6,11 @@ disk, for example the ones a Caddy `file_server` serves read-only. No file
 browser, no uploads, no git: your file host is the browser, mdedit is only the
 editor.
 
+<p>
+  <img src="docs/screenshot-desktop.png" alt="mdedit editing a Markdown note with a task list, table and code block in a desktop browser" width="640">
+  <img src="docs/screenshot-mobile.png" alt="The same note in mdedit on a phone-sized screen" width="254">
+</p>
+
 ## Security posture
 
 - **No authentication.** Run it either as its own Tailscale node
