@@ -58,10 +58,12 @@ the TypeScript typecheck. `make all` builds both.
 
 ### systemd user service
 
-`make install` symlinks `deploy/mdedit.service` into
-`~/.config/systemd/user/`, reloads, and enables it. The unit reads
+`make install` builds the binary, symlinks it to `~/.local/bin/mdedit`,
+symlinks `deploy/mdedit.service` into `~/.config/systemd/user/`, reloads, and
+enables it. The checkout can live anywhere; after `git pull && make install`,
+`systemctl --user restart mdedit` picks up the new build. The unit reads
 `MDEDIT_FLAGS` from `~/.config/mdedit/env`; copy `examples/env.example` there
-and edit it. The unit expects the binary at `~/code/mdedit/bin/mdedit`.
+and edit it before the first install.
 
 ### Caddy integration
 

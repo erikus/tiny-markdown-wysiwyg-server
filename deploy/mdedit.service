@@ -1,5 +1,6 @@
 # mdedit systemd user unit. Install as a symlink with `make install`;
-# this file in the repo is the single source of truth.
+# this file in the repo is the single source of truth. `make install` also
+# links ~/.local/bin/mdedit to this checkout's bin/mdedit.
 #
 # Flags come from MDEDIT_FLAGS in ~/.config/mdedit/env; see
 # examples/env.example.
@@ -12,7 +13,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 EnvironmentFile=%h/.config/mdedit/env
-ExecStart=%h/code/mdedit/bin/mdedit $MDEDIT_FLAGS
+ExecStart=%h/.local/bin/mdedit $MDEDIT_FLAGS
 Restart=on-failure
 RestartSec=5s
 NoNewPrivileges=true

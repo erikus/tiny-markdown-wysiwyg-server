@@ -166,22 +166,24 @@ Write (`Save(path, content, expectedVersion)`), under a store-wide mutex:
   `/static/`.
 - Keep the UI text terse. Light/dark follows `prefers-color-scheme`.
 
-## Deploy conventions (this host, not in code)
+## Deploy conventions
 
-- Unit: `deploy/mdedit.service`, `ExecStart=%h/code/mdedit/bin/mdedit $MDEDIT_FLAGS`,
+- Unit: `deploy/mdedit.service`, `ExecStart=%h/.local/bin/mdedit $MDEDIT_FLAGS`,
   `EnvironmentFile=%h/.config/mdedit/env`. Installed by `make install` as a
-  symlink into `~/.config/systemd/user/`, then `daemon-reload` and
+  symlink into `~/.config/systemd/user/`, alongside a `~/.local/bin/mdedit`
+  symlink to the checkout's `bin/mdedit`, then `daemon-reload` and
   `enable --now`.
 - `examples/env.example` shows a full `MDEDIT_FLAGS` line.
 - `examples/Caddyfile.snippet` + `examples/browse.html` show the file_server
   integration: an "edit" link next to each `.md` entry pointing at
-  `https://<node>/edit{{$.Path}}{{.Name}}`.
+  `https://<node>/edit{{$.Path}}/{{.Name}}`.
 
 ## Makefile targets
 
 `web` (npm ci + build), `build` (go build -o bin/mdedit), `test` (go test
-./... and a frontend typecheck), `install` (symlink unit, daemon-reload,
-enable --now), `all` = web build.
+./... and a frontend typecheck), `install` (symlink binary to
+`~/.local/bin/mdedit`, symlink unit, daemon-reload, enable --now), `all` =
+web build.
 
 ## Formatting-preserving save (web/src/merge.ts)
 
