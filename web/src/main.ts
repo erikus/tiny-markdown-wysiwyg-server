@@ -1,4 +1,4 @@
-// mdedit editor page. Reads the file path from location.pathname, loads it
+// mdwebd editor page. Reads the file path from location.pathname, loads it
 // from /api/file, edits it with Milkdown, and saves with a conditional PUT.
 
 import { ApiError, fetchFile, saveFile } from "./api";
@@ -7,10 +7,10 @@ import { mergeMarkdown } from "./merge";
 
 const EDIT_PREFIX = "/edit/";
 const IMG_PREFIX = "/img/";
-const VIEW_BASE_META_NAME = "mdedit-view-base";
+const VIEW_BASE_META_NAME = "mdwebd-view-base";
 const TRANSIENT_STATUS_MS = 1500;
 const REFORMAT_NOTE = "Saving will reformat this file's Markdown.";
-const TITLE_SUFFIX = " - mdedit";
+const TITLE_SUFFIX = " - mdwebd";
 
 const STATUS_LOADING = "Loading…";
 const STATUS_SAVED = "Saved";

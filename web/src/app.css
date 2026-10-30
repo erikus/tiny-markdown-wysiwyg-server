@@ -1,4 +1,4 @@
-/* mdedit editor page. Light/dark follows prefers-color-scheme. */
+/* mdwebd editor page. Light/dark follows prefers-color-scheme. */
 @import "@milkdown/kit/prose/view/style/prosemirror.css";
 @import "@milkdown/kit/prose/tables/style/tables.css";
 @import "@milkdown/kit/prose/gapcursor/style/gapcursor.css";

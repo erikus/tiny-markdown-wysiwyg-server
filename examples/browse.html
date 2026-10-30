@@ -3,8 +3,8 @@
 <meta name="color-scheme" content="light dark">
 <!--
   Caddy file_server browse template with an "edit" link next to every
-  Markdown file, pointing at mdedit. Replace EDIT_HOST with the host mdedit is
-  reachable on (its tsnet node name, e.g. edit.example.ts.net). The mdedit
+  Markdown file, pointing at mdwebd. Replace EDIT_HOST with the host mdwebd is
+  reachable on (its tsnet node name, e.g. edit.example.ts.net). The mdwebd
   --root NAMEs must match the first path segment of the URLs this file_server
   serves, e.g. `root * /srv/files` holding `/srv/files/notes` pairs with
   `--root notes=/home/me/notes`.
@@ -12,7 +12,7 @@
   .Path is the cleaned, percent-encoded request path of the listed directory
   with no trailing slash ("/" at the root, "/notes/sub" below it), so
   $.Path + "/" + .Name is the file's path relative to the file_server root.
-  Files at the root itself get no link: mdedit paths always start with a
+  Files at the root itself get no link: mdwebd paths always start with a
   root name.
 -->
 <pre>

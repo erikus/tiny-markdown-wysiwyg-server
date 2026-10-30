@@ -1,8 +1,8 @@
-// HTTP client for the mdedit backend. All paths are absolute so the <base>
+// HTTP client for the mdwebd backend. All paths are absolute so the <base>
 // element (set for image resolution) never affects API requests.
 
 const API_FILE_PATH = "/api/file";
-const WRITE_HEADER_NAME = "X-Mdedit";
+const WRITE_HEADER_NAME = "X-Mdwebd";
 const WRITE_HEADER_VALUE = "1";
 const HTTP_CONFLICT = 409;
 

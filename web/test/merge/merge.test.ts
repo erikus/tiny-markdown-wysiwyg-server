@@ -1,6 +1,6 @@
 // Tests for the formatting-preserving merge (src/merge.ts). Bundled by
 // test/run.mjs and run with `node --test`; the corpus directory arrives in
-// MDEDIT_MERGE_CORPUS.
+// MDWEBD_MERGE_CORPUS.
 //
 // Corpus files come in triples: NAME.original.md (hand-written), NAME.edited.md
 // (the edit as the serializer would emit it) and NAME.expected.md (the merge
@@ -14,7 +14,7 @@ import { test } from "node:test";
 import { MERGE_INTERNALS, mergeMarkdown, structurallyEqual } from "../../src/merge";
 import { createParser, createSerializer } from "../../src/remark";
 
-const CORPUS_ENV = "MDEDIT_MERGE_CORPUS";
+const CORPUS_ENV = "MDWEBD_MERGE_CORPUS";
 const ORIGINAL_SUFFIX = ".original.md";
 const EDITED_SUFFIX = ".edited.md";
 const EXPECTED_SUFFIX = ".expected.md";

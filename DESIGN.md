@@ -1,28 +1,30 @@
-# mdedit — design and contract
+# tiny-markdown-wysiwyg-server (mdwebd) — design and contract
 
 A single Go binary that lets you edit Markdown files in the browser with a
 WYSIWYG editor, against directories that already exist on disk (for example
 the directories a Caddy `file_server` is serving read-only). No git
 awareness, no file browser, no uploads: the file host you already have is the
-browser; mdedit is only the editor.
+browser; mdwebd is only the editor.
 
 Intended to be open-sourced under MIT. Nothing host-specific (hostnames, home
 layout) goes in the code; it all goes in flags and `examples/`.
 
 ## Shape
 
-- `main.go` — flags, wiring, listener (plain TCP or tsnet).
+- `cmd/mdwebd/main.go` — flags, wiring, listener (plain TCP or tsnet).
 - `internal/store` — path resolution and the read / conditional-write rules.
 - `internal/server` — HTTP handlers, security middleware.
 - `internal/web` — `embed.FS` of `internal/web/static/*` (built assets,
   committed so `go install` works without Node).
 - `web/` — TypeScript source for the editor page, bundled with esbuild into
   `internal/web/static/`.
-- `deploy/mdedit.service` — systemd user unit (installed as a symlink).
+- `deploy/mdwebd.service` — systemd user unit (installed as a symlink).
 - `examples/` — Caddy snippet, `browse.html` template, env file example.
 
-Module path: `github.com/erikus/mdedit`. Go 1.26. Constants for every default
-and limit live at the top of the file that uses them; no inline magic numbers.
+Module path: `github.com/erikus/tiny-markdown-wysiwyg-server`; the command
+lives in `cmd/mdwebd` so `go install` names the binary `mdwebd`. Go 1.26.
+Constants for every default and limit live at the top of the file that uses
+them; no inline magic numbers.
 
 ## Flags
 
@@ -31,7 +33,7 @@ and limit live at the top of the file that uses them; no inline magic numbers.
 | `--root NAME=DIR` | (required, repeatable) | Expose DIR under the URL prefix NAME. NAME matches `^[A-Za-z0-9_-]+$`. DIR is made absolute and symlink-resolved at startup. |
 | `--listen ADDR` | `127.0.0.1:8585` | Plain HTTP listener. Ignored when `--tsnet-hostname` is set. |
 | `--tsnet-hostname NAME` | (empty = off) | Run as its own Tailscale node named NAME using `tsnet`, serving HTTPS on :443 with Tailscale-issued certs (`ListenTLS`). Login URL is logged if the node is not yet authorized; `TS_AUTHKEY` env is honoured by tsnet. |
-| `--tsnet-dir DIR` | `$XDG_STATE_HOME/mdedit/tsnet` or `~/.local/state/mdedit/tsnet` | tsnet state directory. |
+| `--tsnet-dir DIR` | `$XDG_STATE_HOME/mdwebd/tsnet` or `~/.local/state/mdwebd/tsnet` | tsnet state directory. |
 | `--allowed-host HOST` | (repeatable) | Extra Host header values to accept (see Host check). |
 | `--view-base URL` | (empty) | If set, the editor shows a "view" link to `URL + "/" + path`. |
 | `--ext LIST` | `.md,.markdown` | Comma-separated, case-insensitive extension allowlist for editable files. |
@@ -70,7 +72,7 @@ containment violations, 400 for malformed, 404 for missing):
    it must equal the resolved root or start with `resolvedRoot + separator`.
 3. `Lstat` the final element. If it is a symlink, `EvalSymlinks` it and apply
    the same containment check to the target. The resolved path must be a
-   regular file. Missing → 404 (mdedit edits existing files only).
+   regular file. Missing → 404 (mdwebd edits existing files only).
 4. The resolved, real path is the one used for reads and for the atomic
    replace. (Replacing the real target keeps an in-root symlink intact.)
 
@@ -88,7 +90,7 @@ Write (`Save(path, content, expectedVersion)`), under a store-wide mutex:
    `\r\n`; if it had a BOM, prepend it; if the original ended with a newline
    and the new content does not, append one (and vice versa: if the original
    had no trailing newline, do not add one).
-4. Write to a temp file in the same directory (`.mdedit-*`), same mode bits as
+4. Write to a temp file in the same directory (`.mdwebd-*`), same mode bits as
    the target, fsync, then `os.Rename` over the resolved real path. Remove the
    temp file on any failure.
 5. Return the new version (sha256 of the bytes written).
@@ -100,8 +102,8 @@ Write (`Save(path, content, expectedVersion)`), under a store-wide mutex:
   the tsnet node's short hostname and FQDN (from `LocalClient().Status`), and
   any `--allowed-host`. Otherwise 400 JSON. (DNS-rebinding defence.)
 - **Writes need a custom header.** Any non-`GET`/`HEAD`/`OPTIONS` request must
-  carry `X-Mdedit: 1`; otherwise 403. This forces a CORS preflight for any
-  cross-origin caller, and mdedit never answers preflights, so cross-site
+  carry `X-Mdwebd: 1`; otherwise 403. This forces a CORS preflight for any
+  cross-origin caller, and mdwebd never answers preflights, so cross-site
   request forgery from other origins is impossible.
 - **Origin / Sec-Fetch-Site.** If an `Origin` header is present on a write it
   must match the request's own scheme+host (scheme is `https` under tsnet,
@@ -146,13 +148,13 @@ Write (`Save(path, content, expectedVersion)`), under a store-wide mutex:
   "nothing to save" status) when not dirty, so an untouched file is never
   rewritten.
 - Save on Ctrl/Cmd+S and a button: `PUT /api/file` with header
-  `X-Mdedit: 1`, body `{ path, content, version }`. On 2xx update `version`
+  `X-Mdwebd: 1`, body `{ path, content, version }`. On 2xx update `version`
   and `baseline`. On 409 show a conflict banner with a "Reload" action that
   refetches and replaces the document (discarding local edits only after the
   user clicks). `beforeunload` guard while dirty or saving.
 - Toolbar: file path, status (`Saved` / `Unsaved` / `Saving…` / `Conflict` /
   error text), **Save**, **Raw** toggle, and a **View** link if the server
-  injected a view base (served by the page as a `<meta name="mdedit-view-base">`
+  injected a view base (served by the page as a `<meta name="mdwebd-view-base">`
   filled in by the Go handler — the only dynamic part of `index.html`;
   implement with `html/template` so it is escaped).
 - Raw mode: a plain `<textarea>` containing the current Markdown. Switching
@@ -168,21 +170,21 @@ Write (`Save(path, content, expectedVersion)`), under a store-wide mutex:
 
 ## Deploy conventions
 
-- Unit: `deploy/mdedit.service`, `ExecStart=%h/.local/bin/mdedit $MDEDIT_FLAGS`,
-  `EnvironmentFile=%h/.config/mdedit/env`. Installed by `make install` as a
-  symlink into `~/.config/systemd/user/`, alongside a `~/.local/bin/mdedit`
-  symlink to the checkout's `bin/mdedit`, then `daemon-reload` and
+- Unit: `deploy/mdwebd.service`, `ExecStart=%h/.local/bin/mdwebd $MDWEBD_FLAGS`,
+  `EnvironmentFile=%h/.config/mdwebd/env`. Installed by `make install` as a
+  symlink into `~/.config/systemd/user/`, alongside a `~/.local/bin/mdwebd`
+  symlink to the checkout's `bin/mdwebd`, then `daemon-reload` and
   `enable --now`.
-- `examples/env.example` shows a full `MDEDIT_FLAGS` line.
+- `examples/env.example` shows a full `MDWEBD_FLAGS` line.
 - `examples/Caddyfile.snippet` + `examples/browse.html` show the file_server
   integration: an "edit" link next to each `.md` entry pointing at
   `https://<node>/edit{{$.Path}}/{{.Name}}`.
 
 ## Makefile targets
 
-`web` (npm ci + build), `build` (go build -o bin/mdedit), `test` (go test
+`web` (npm ci + build), `build` (go build -o bin/mdwebd ./cmd/mdwebd), `test` (go test
 ./... and a frontend typecheck), `install` (symlink binary to
-`~/.local/bin/mdedit`, symlink unit, daemon-reload, enable --now), `all` =
+`~/.local/bin/mdwebd`, symlink unit, daemon-reload, enable --now), `all` =
 web build.
 
 ## Formatting-preserving save (web/src/merge.ts)

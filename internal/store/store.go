@@ -1,4 +1,4 @@
-// Package store resolves mdedit file paths against configured roots and
+// Package store resolves mdwebd file paths against configured roots and
 // implements the read / conditional-write rules from DESIGN.md.
 package store
 
@@ -32,7 +32,7 @@ const (
 	// pathSeparator separates segments of a URL file path.
 	pathSeparator = "/"
 	// tempPrefix is the prefix of temp files created next to the target.
-	tempPrefix = ".mdedit-"
+	tempPrefix = ".mdwebd-"
 	// gitDirName is the directory name that is never traversed.
 	gitDirName = ".git"
 	// imageTypePrefix is the content type prefix OpenImage accepts.

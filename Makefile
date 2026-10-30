@@ -1,13 +1,13 @@
-# mdedit build targets. See DESIGN.md.
+# mdwebd build targets. See DESIGN.md.
 
-BIN      := bin/mdedit
+BIN      := bin/mdwebd
 WEB_DIR  := web
-UNIT     := deploy/mdedit.service
+UNIT     := deploy/mdwebd.service
 UNIT_DIR := $(HOME)/.config/systemd/user
-# The unit runs %h/.local/bin/mdedit; install links it to this checkout's
+# The unit runs %h/.local/bin/mdwebd; install links it to this checkout's
 # binary, so the repo can live anywhere.
-BIN_LINK := $(HOME)/.local/bin/mdedit
-SERVICE  := mdedit
+BIN_LINK := $(HOME)/.local/bin/mdwebd
+SERVICE  := mdwebd
 
 .PHONY: all web build test install clean
 
@@ -17,7 +17,7 @@ web:
 	cd $(WEB_DIR) && npm ci && npm run build
 
 build:
-	go build -o $(BIN) .
+	go build -o $(BIN) ./cmd/mdwebd
 
 test:
 	go test ./...

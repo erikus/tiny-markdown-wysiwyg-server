@@ -1,4 +1,4 @@
-module github.com/erikus/mdedit
+module github.com/erikus/tiny-markdown-wysiwyg-server
 
 go 1.26.6
 

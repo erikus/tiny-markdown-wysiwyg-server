@@ -60,12 +60,12 @@ func TestParseFlags(t *testing.T) {
 
 func TestDefaultTsnetDir(t *testing.T) {
 	t.Setenv("XDG_STATE_HOME", "/xdg")
-	if got := defaultTsnetDir(); got != "/xdg/mdedit/tsnet" {
+	if got := defaultTsnetDir(); got != "/xdg/mdwebd/tsnet" {
 		t.Fatalf("got %q", got)
 	}
 	t.Setenv("XDG_STATE_HOME", "")
 	t.Setenv("HOME", "/home/u")
-	if got := defaultTsnetDir(); got != "/home/u/.local/state/mdedit/tsnet" {
+	if got := defaultTsnetDir(); got != "/home/u/.local/state/mdwebd/tsnet" {
 		t.Fatalf("got %q", got)
 	}
 }

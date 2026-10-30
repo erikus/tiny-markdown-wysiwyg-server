@@ -1,0 +1,23 @@
+# mdwebd systemd user unit. Install as a symlink with `make install`;
+# this file in the repo is the single source of truth. `make install` also
+# links ~/.local/bin/mdwebd to this checkout's bin/mdwebd.
+#
+# Flags come from MDWEBD_FLAGS in ~/.config/mdwebd/env; see
+# examples/env.example.
+
+[Unit]
+Description=mdwebd - browser Markdown editor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=%h/.config/mdwebd/env
+ExecStart=%h/.local/bin/mdwebd $MDWEBD_FLAGS
+Restart=on-failure
+RestartSec=5s
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

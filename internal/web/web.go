@@ -23,7 +23,7 @@ var Static embed.FS
 
 // IndexTemplate is index.html parsed as an html/template. The only dynamic
 // value is .ViewBase, which the page exposes as
-// <meta name="mdedit-view-base" content="{{.ViewBase}}">.
+// <meta name="mdwebd-view-base" content="{{.ViewBase}}">.
 var IndexTemplate *template.Template = template.Must(template.ParseFS(Static, indexFile))
 
 // IndexData is the data passed to IndexTemplate.

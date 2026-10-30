@@ -1,8 +1,8 @@
 {
-  "name": "mdedit-web",
+  "name": "mdwebd-web",
   "version": "0.0.0",
   "private": true,
-  "description": "Browser frontend for mdedit, bundled into ../internal/web/static",
+  "description": "Browser frontend for mdwebd, bundled into ../internal/web/static",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",

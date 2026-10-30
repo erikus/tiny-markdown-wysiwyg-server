@@ -1,4 +1,4 @@
-// Package server is the HTTP surface of mdedit: routes, JSON errors and the
+// Package server is the HTTP surface of mdwebd: routes, JSON errors and the
 // security middleware described in DESIGN.md.
 package server
 
@@ -17,15 +17,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/erikus/mdedit/internal/store"
-	"github.com/erikus/mdedit/internal/web"
+	"github.com/erikus/tiny-markdown-wysiwyg-server/internal/store"
+	"github.com/erikus/tiny-markdown-wysiwyg-server/internal/web"
 )
 
 const (
 	// writeHeader must be present with writeHeaderValue on every non-safe
 	// request. Browsers only send it after a successful CORS preflight, and
-	// mdedit never answers preflights.
-	writeHeader      = "X-Mdedit"
+	// mdwebd never answers preflights.
+	writeHeader      = "X-Mdwebd"
 	writeHeaderValue = "1"
 
 	// bodyMultiplier and bodySlackBytes bound the PUT body:
@@ -55,8 +55,8 @@ const (
 
 	// rootListTemplate is the tiny page at GET /.
 	rootListTemplate = `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>mdedit</title></head>
-<body><h1>mdedit</h1><p>Roots:</p><ul>
+<html lang="en"><head><meta charset="utf-8"><title>mdwebd</title></head>
+<body><h1>mdwebd</h1><p>Roots:</p><ul>
 {{range .}}<li>{{.}}</li>
 {{end}}</ul></body></html>
 `

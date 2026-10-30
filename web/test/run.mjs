@@ -11,7 +11,7 @@ const WEB_DIR = resolve(TEST_DIR, "..");
 const TEST_GLOB = "**/*.test.ts";
 const CORPUS_DIR = join(TEST_DIR, "merge", "corpus");
 /** Env var the tests read to find the fixture corpus. */
-const CORPUS_ENV = "MDEDIT_MERGE_CORPUS";
+const CORPUS_ENV = "MDWEBD_MERGE_CORPUS";
 const TARGET = "node20";
 
 const entryPoints = globSync(TEST_GLOB, { cwd: TEST_DIR }).map((p) => join(TEST_DIR, p));
@@ -20,7 +20,7 @@ if (entryPoints.length === 0) {
   process.exit(1);
 }
 
-const outDir = mkdtempSync(join(tmpdir(), "mdedit-web-test-"));
+const outDir = mkdtempSync(join(tmpdir(), "mdwebd-web-test-"));
 try {
   await esbuild.build({
     entryPoints,

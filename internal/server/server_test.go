@@ -14,13 +14,13 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/erikus/mdedit/internal/store"
+	"github.com/erikus/tiny-markdown-wysiwyg-server/internal/store"
 )
 
 const (
 	testHost      = "localhost:8585"
 	testRootName  = "notes"
-	testIndexHTML = `<!doctype html><title>t</title><meta name="mdedit-view-base" content="{{.ViewBase}}"><script src="/static/app.js"></script>`
+	testIndexHTML = `<!doctype html><title>t</title><meta name="mdwebd-view-base" content="{{.ViewBase}}"><script src="/static/app.js"></script>`
 	testViewBase  = `https://files.example.com/"><script>`
 )
 

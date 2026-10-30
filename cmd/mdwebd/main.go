@@ -1,4 +1,4 @@
-// Command mdedit is a single-binary browser Markdown editor for directories
+// Command mdwebd is a single-binary browser Markdown editor for directories
 // that already exist on disk. See DESIGN.md and README.md.
 package main
 
@@ -19,8 +19,8 @@ import (
 
 	"tailscale.com/tsnet"
 
-	"github.com/erikus/mdedit/internal/server"
-	"github.com/erikus/mdedit/internal/store"
+	"github.com/erikus/tiny-markdown-wysiwyg-server/internal/server"
+	"github.com/erikus/tiny-markdown-wysiwyg-server/internal/store"
 )
 
 const (
@@ -28,7 +28,7 @@ const (
 	// tsnetListenAddr is the HTTPS address served when running as a tsnet node.
 	tsnetListenAddr = ":443"
 	// tsnetStateSubdir is appended to the XDG state directory for tsnet state.
-	tsnetStateSubdir = "mdedit/tsnet"
+	tsnetStateSubdir = "mdwebd/tsnet"
 	// xdgStateFallback is used under $HOME when XDG_STATE_HOME is unset.
 	xdgStateFallback = ".local/state"
 	// extSeparator separates entries in --ext.
@@ -103,7 +103,7 @@ func defaultTsnetDir() string {
 
 func parseFlags(args []string) (*options, error) {
 	opts := &options{}
-	fs := flag.NewFlagSet("mdedit", flag.ContinueOnError)
+	fs := flag.NewFlagSet("mdwebd", flag.ContinueOnError)
 	fs.Var(&opts.roots, "root", "NAME=DIR: expose DIR under the URL prefix NAME (required, repeatable)")
 	fs.StringVar(&opts.listen, "listen", defaultListen, "plain HTTP listen address; ignored with --tsnet-hostname")
 	fs.StringVar(&opts.tsnetHostname, "tsnet-hostname", "", "run as a Tailscale node with this name, serving HTTPS on :443")
@@ -135,7 +135,7 @@ func parseFlags(args []string) (*options, error) {
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lmsgprefix)
-	log.SetPrefix("mdedit: ")
+	log.SetPrefix("mdwebd: ")
 	opts, err := parseFlags(os.Args[1:])
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
