@@ -8,7 +8,7 @@ editor.
 
 <p>
   <img src="docs/screenshot-desktop.png" alt="mdwebd editing a Markdown note with a task list, table and code block in a desktop browser" width="640">
-  <img src="docs/screenshot-mobile.png" alt="The same note in mdwebd on a phone-sized screen" width="254">
+  <img src="docs/screenshot-mobile.png" alt="The same note in mdwebd on a phone-sized screen" width="208">
 </p>
 
 ## Security posture
