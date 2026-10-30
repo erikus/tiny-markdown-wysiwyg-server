@@ -20,6 +20,9 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --bar-height: 2.5rem;
   --content-width: 52rem;
+  --path-min-width: 4rem;
+  /* Pulls a task checkbox left into the space a bullet marker would use. */
+  --task-outdent: 1.4em;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -74,8 +77,10 @@ header {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  min-width: 0;
-  flex: 1 1 auto;
+  /* Basis 0 so the path shrinks (with an ellipsis) before the buttons wrap
+     onto a second line on narrow screens. */
+  min-width: var(--path-min-width);
+  flex: 1 1 0;
 }
 
 #status {
@@ -262,10 +267,18 @@ main {
   padding: 0 0.2em;
 }
 
+/* Every list item wraps its text in a <p>. In a tight list (Markdown with no
+   blank lines between items) those paragraphs get no margins, so the list
+   renders as compactly as it reads in the source. Loose lists keep them. */
+.ProseMirror :is(ul, ol):not([data-spread="true"]) > li p {
+  margin: 0;
+}
+
 /* GFM task list items: our node view renders a real checkbox before the
    item content (see editor.ts). */
 .ProseMirror li[data-item-type="task"] {
   list-style: none;
+  margin-left: calc(-1 * var(--task-outdent));
   display: flex;
   align-items: baseline;
   gap: 0.4em;
