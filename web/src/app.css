@@ -255,6 +255,12 @@ main {
   background: var(--bar-bg);
 }
 
+/* Table cells wrap their text in a <p> too; without this each row is as
+   tall as a paragraph with margins. */
+.ProseMirror :is(th, td) p {
+  margin: 0;
+}
+
 /* Raw HTML from the Markdown is shown as literal source, never rendered. */
 .ProseMirror .md-html,
 .ProseMirror span[data-type="html"] {
